@@ -4,6 +4,7 @@ import { LeagueTableView } from "./ui/features/league-table/LeagueTableView";
 import { MatchDayView } from "./ui/features/match-day/MatchDayView";
 import { NewsFeedView } from "./ui/features/news-feed/NewsFeedView";
 import { OnboardingView } from "./ui/features/onboarding/OnboardingView";
+import { RecordsView } from "./ui/features/records/RecordsView";
 import { SeasonEndView } from "./ui/features/season-end/SeasonEndView";
 import { SquadView } from "./ui/features/squad/SquadView";
 import { TacticsView } from "./ui/features/tactics/TacticsView";
@@ -27,6 +28,7 @@ export function App() {
       {activeView === "table" ? <LeagueTableView /> : null}
       {activeView === "market" ? <TransferMarketView /> : null}
       {activeView === "news" ? <NewsFeedView /> : null}
+      {activeView === "records" ? <RecordsView /> : null}
       {activeView === "season-end" ? <SeasonEndView /> : null}
     </MainLayout>
   );

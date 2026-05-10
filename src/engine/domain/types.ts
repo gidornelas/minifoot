@@ -154,13 +154,56 @@ export type NewsTag =
 export interface SeasonRecord {
   season: number;
   championClubId?: string;
+  championPoints?: number;
   playerClubPosition?: number;
+  playerClubPoints?: number;
   trophies: Trophy[];
   relegatedClubIds?: string[];
   promotedClubIds?: string[];
   retiredPlayerIds?: string[];
   regenPlayerIds?: string[];
   achievementsUnlocked?: string[];
+  topScorerPlayerId?: string;
+  topScorerGoals?: number;
+  bestAttackClubId?: string;
+  bestAttackGoals?: number;
+  bestDefenseClubId?: string;
+  bestDefenseGoalsAgainst?: number;
+  highestScoringMatchId?: string;
+  highestScoringMatchGoals?: number;
+  biggestWinMatchId?: string;
+  biggestWinMargin?: number;
+}
+
+export interface ClubSeasonRecord {
+  season: number;
+  clubId: string;
+  value: number;
+}
+
+export interface PlayerSeasonRecord {
+  season: number;
+  playerId: string;
+  clubId?: string | null;
+  value: number;
+}
+
+export interface MatchSeasonRecord {
+  season: number;
+  matchId: string;
+  homeId: string;
+  awayId: string;
+  value: number;
+}
+
+export interface WorldRecordBook {
+  highestPoints?: ClubSeasonRecord;
+  mostGoalsFor?: ClubSeasonRecord;
+  bestDefense?: ClubSeasonRecord;
+  topScorer?: PlayerSeasonRecord;
+  biggestWin?: MatchSeasonRecord;
+  highestScoringMatch?: MatchSeasonRecord;
+  titleCounts: Record<string, number>;
 }
 
 export interface GameState {
@@ -178,4 +221,5 @@ export interface GameState {
   matches: Record<string, Match>;
   newsLog: NewsItem[];
   achievements: string[];
+  records?: WorldRecordBook;
 }

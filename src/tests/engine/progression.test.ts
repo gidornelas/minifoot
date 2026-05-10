@@ -28,6 +28,11 @@ describe("season progression", () => {
       expect(league?.clubIds).toHaveLength(20);
       expect(league?.clubIds).toContain(game.playerClubId);
       expect(game.currentSeason.finished).toBe(true);
+      expect(record?.championPoints).toBeGreaterThan(0);
+      expect(record?.topScorerGoals).toBeGreaterThan(0);
+      expect(record?.highestScoringMatchGoals).toBeGreaterThan(0);
+      expect(game.records?.highestPoints?.value).toBeGreaterThan(0);
+      expect(game.records?.titleCounts).not.toEqual({});
 
       retiredCount += record?.retiredPlayerIds?.length ?? 0;
       regenCount += record?.regenPlayerIds?.length ?? 0;
@@ -79,6 +84,7 @@ function createGameState(seed: number): GameState {
     playerClubId,
     playerName: "Teste",
     players: generated.players,
+    records: { titleCounts: {} },
     rngState: generated.rngState,
     seed,
     version: 1,

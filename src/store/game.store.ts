@@ -24,6 +24,7 @@ export type AppView =
   | "table"
   | "market"
   | "news"
+  | "records"
   | "season-end";
 export type SquadSortKey = "name" | "position" | "overall" | "potential" | "fitness" | "value";
 export type SortDirection = "asc" | "desc";
@@ -646,6 +647,7 @@ function createInitialGameState(
       },
     ],
     achievements: [],
+    records: { titleCounts: {} },
   };
 }
 

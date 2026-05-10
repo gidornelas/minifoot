@@ -14,3 +14,4 @@
 - Sprint 7: engine de noticias com 88 templates, tags/importance, feed filtravel na Home/Noticias e destaques visuais para zebras, viradas e transferencias aceitas.
 - Sprint 8: progressao entre temporadas com resumo final, historico, premio/trofeu, promocao/rebaixamento, aposentadorias, regens, conquistas e nova tela de fim de temporada.
 - Sprint 9: onboarding de carreira, tutorial contextual em 4 dicas, som opcional desligado por padrao, animacoes leves, e2e mouse/teclado e smoke a11y sem botoes anonimos.
+- Fase 2: historico mundial e recordes com sala de marcas, contagem de titulos, melhores campanhas, artilharia, melhor ataque/defesa e jogos extremos.

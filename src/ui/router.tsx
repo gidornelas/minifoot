@@ -5,5 +5,6 @@ export const routes = [
   { id: "league-table", path: "/league-table" },
   { id: "transfers", path: "/transfers" },
   { id: "news", path: "/news" },
+  { id: "records", path: "/records" },
   { id: "season-end", path: "/season-end" },
 ] as const;

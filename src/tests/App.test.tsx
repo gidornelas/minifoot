@@ -141,6 +141,26 @@ describe("App", () => {
     expect(useGameStore.getState().game.currentSeason.finished).toBe(false);
   });
 
+  it("opens career records after a completed season", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await completeOnboarding(user);
+
+    for (let round = 1; round <= 38; round += 1) {
+      act(() => {
+        useGameStore.getState().advanceRound();
+      });
+    }
+
+    await user.click(screen.getByRole("button", { name: /Recordes\s*7/ }));
+
+    expect(
+      screen.getByRole("heading", { level: 2, name: "Historico e recordes" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Maior pontuacao")).toBeInTheDocument();
+    expect(screen.getByText("Temporadas")).toBeInTheDocument();
+  });
+
   it("creates a market offer from the transfer screen", async () => {
     const user = userEvent.setup();
     const state = useGameStore.getState();

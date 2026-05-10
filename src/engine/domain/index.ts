@@ -1,14 +1,17 @@
 export type {
   Attributes,
   Club,
+  ClubSeasonRecord,
   GameState,
   League,
   Match,
   MatchEvent,
   MatchResult,
+  MatchSeasonRecord,
   NewsItem,
   NewsTag,
   Player,
+  PlayerSeasonRecord,
   PlayerTrait,
   Position,
   PrizeMoney,
@@ -16,4 +19,5 @@ export type {
   SeasonCompetition,
   SeasonRecord,
   Trophy,
+  WorldRecordBook,
 } from "./types";

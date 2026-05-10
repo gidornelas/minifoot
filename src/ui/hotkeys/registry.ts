@@ -5,6 +5,7 @@ export type HotkeyScope =
   | "match-day"
   | "market"
   | "news"
+  | "records"
   | "season-end";
 
 export interface HotkeyEntry {
@@ -21,6 +22,7 @@ export const HOTKEYS: HotkeyEntry[] = [
   { id: "nav.table", keys: ["4"], label: "Tabela", scope: "global" },
   { id: "nav.market", keys: ["5"], label: "Mercado", scope: "global" },
   { id: "nav.news", keys: ["6"], label: "Noticias", scope: "global" },
+  { id: "nav.records", keys: ["7"], label: "Recordes", scope: "global" },
   { id: "action.continue", keys: ["Espaco"], label: "Avancar", scope: "global" },
   { id: "action.back", keys: ["Esc"], label: "Voltar", scope: "global" },
   { id: "modal.shortcuts", keys: ["?"], label: "Atalhos", scope: "global" },

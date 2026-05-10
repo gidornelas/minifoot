@@ -151,13 +151,56 @@ export const NewsItemSchema = z.object({
 export const SeasonRecordSchema = z.object({
   season: z.number().int().positive(),
   championClubId: z.string().min(1).optional(),
+  championPoints: z.number().int().nonnegative().optional(),
   playerClubPosition: z.number().int().positive().optional(),
+  playerClubPoints: z.number().int().nonnegative().optional(),
   trophies: z.array(TrophySchema),
   relegatedClubIds: z.array(z.string().min(1)).optional(),
   promotedClubIds: z.array(z.string().min(1)).optional(),
   retiredPlayerIds: z.array(z.string().min(1)).optional(),
   regenPlayerIds: z.array(z.string().min(1)).optional(),
   achievementsUnlocked: z.array(z.string().min(1)).optional(),
+  topScorerPlayerId: z.string().min(1).optional(),
+  topScorerGoals: z.number().int().nonnegative().optional(),
+  bestAttackClubId: z.string().min(1).optional(),
+  bestAttackGoals: z.number().int().nonnegative().optional(),
+  bestDefenseClubId: z.string().min(1).optional(),
+  bestDefenseGoalsAgainst: z.number().int().nonnegative().optional(),
+  highestScoringMatchId: z.string().min(1).optional(),
+  highestScoringMatchGoals: z.number().int().nonnegative().optional(),
+  biggestWinMatchId: z.string().min(1).optional(),
+  biggestWinMargin: z.number().int().nonnegative().optional(),
+});
+
+export const ClubSeasonRecordSchema = z.object({
+  season: z.number().int().positive(),
+  clubId: z.string().min(1),
+  value: z.number().int().nonnegative(),
+});
+
+export const PlayerSeasonRecordSchema = z.object({
+  season: z.number().int().positive(),
+  playerId: z.string().min(1),
+  clubId: z.string().min(1).nullable().optional(),
+  value: z.number().int().nonnegative(),
+});
+
+export const MatchSeasonRecordSchema = z.object({
+  season: z.number().int().positive(),
+  matchId: z.string().min(1),
+  homeId: z.string().min(1),
+  awayId: z.string().min(1),
+  value: z.number().int().nonnegative(),
+});
+
+export const WorldRecordBookSchema = z.object({
+  highestPoints: ClubSeasonRecordSchema.optional(),
+  mostGoalsFor: ClubSeasonRecordSchema.optional(),
+  bestDefense: ClubSeasonRecordSchema.optional(),
+  topScorer: PlayerSeasonRecordSchema.optional(),
+  biggestWin: MatchSeasonRecordSchema.optional(),
+  highestScoringMatch: MatchSeasonRecordSchema.optional(),
+  titleCounts: z.record(z.string(), z.number().int().nonnegative()),
 });
 
 export const GameStateSchema = z.object({
@@ -175,6 +218,7 @@ export const GameStateSchema = z.object({
   matches: z.record(z.string(), MatchSchema),
   newsLog: z.array(NewsItemSchema).max(200),
   achievements: z.array(z.string().min(1)),
+  records: WorldRecordBookSchema.optional(),
 });
 
 export const SaveMetadataSchema = GameStateSchema.pick({

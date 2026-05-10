@@ -115,3 +115,16 @@ src/ui/layouts/MainLayout.tsx
 - O tutorial tem 4 dicas contextuais e pode ser dispensado individualmente ou pulado de uma vez.
 - O som e opcional, desligado por padrao, e usa Web Audio apenas quando o usuario ativa o toggle.
 - O polimento visual usa animacao CSS curta respeitando `prefers-reduced-motion`.
+
+## Historico e recordes
+
+A primeira entrega da Fase 2 adiciona memoria de carreira sem persistir todos os jogos antigos:
+
+```txt
+src/ui/features/records/RecordsView.tsx
+src/engine/progression/season.ts
+```
+
+- `SeasonRecord` guarda resumo estatistico da temporada: pontos do campeao, pontos do clube do usuario, artilheiro, ataque/defesa, maior goleada e jogo com mais gols.
+- `WorldRecordBook` fica em `GameState.records` e e atualizado por `completeSeason()` com maiores marcas historicas e contagem de titulos.
+- `RecordsView` expõe a sala de recordes na navegacao global (`7`) e lista temporadas arquivadas sem recalcular partidas antigas.

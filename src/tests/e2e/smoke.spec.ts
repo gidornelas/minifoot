@@ -40,6 +40,9 @@ test("plays a Sprint 9 keyboard-only path", async ({ page }) => {
     "aria-pressed",
     "true",
   );
+
+  await page.keyboard.press("7");
+  await expect(page.getByRole("heading", { level: 2, name: "Historico e recordes" })).toBeVisible();
 });
 
 test("finishes a season and starts the next one with mouse", async ({ page }) => {
@@ -62,6 +65,9 @@ test("finishes a season and starts the next one with mouse", async ({ page }) =>
 
   await expect(page.getByRole("heading", { name: "Home" })).toBeVisible();
   await expect(page.getByText("1/41")).toBeVisible();
+
+  await page.getByRole("button", { name: /Recordes\s*7/ }).click();
+  await expect(page.getByText("Maior pontuacao")).toBeVisible();
 });
 
 test("keeps critical accessibility contracts", async ({ page }) => {

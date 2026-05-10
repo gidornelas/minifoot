@@ -1,12 +1,17 @@
 import type {
   Attributes,
   Club,
+  ClubSeasonRecord,
   GameState,
   League,
+  Match,
+  MatchSeasonRecord,
   NewsItem,
   Player,
+  PlayerSeasonRecord,
   Position,
   SeasonRecord,
+  WorldRecordBook,
 } from "../domain";
 import { FIRST_NAMES, LAST_NAMES } from "../generation/name-pools";
 import { between, chance, createRng, integer, pick, type Rng } from "../rng";
@@ -67,7 +72,14 @@ export function completeSeason(input: CompleteSeasonInput): GameState {
 
   const rng = createRng(input.game.rngState);
   const table = calculateLeagueTable(league, Object.values(input.game.matches));
+  const seasonStats = calculateSeasonStats({
+    matches: Object.values(input.game.matches),
+    players: input.game.players,
+    season: input.game.currentSeason.number,
+    table,
+  });
   const championClubId = table[0]?.clubId;
+  const playerClubRow = table.find((row) => row.clubId === input.game.playerClubId);
   const playerClubPosition =
     table.findIndex((row) => row.clubId === input.game.playerClubId) + 1 || undefined;
   const relegatedClubIds = pickRelegatedClubIds(league, input.game.playerClubId, table);
@@ -109,17 +121,30 @@ export function completeSeason(input: CompleteSeasonInput): GameState {
   });
   const record: SeasonRecord = {
     achievementsUnlocked,
+    bestAttackClubId: seasonStats.bestAttack?.clubId,
+    bestAttackGoals: seasonStats.bestAttack?.value,
+    bestDefenseClubId: seasonStats.bestDefense?.clubId,
+    bestDefenseGoalsAgainst: seasonStats.bestDefense?.value,
+    biggestWinMargin: seasonStats.biggestWin?.value,
+    biggestWinMatchId: seasonStats.biggestWin?.matchId,
     championClubId,
+    championPoints: table[0]?.points,
+    highestScoringMatchGoals: seasonStats.highestScoringMatch?.value,
+    highestScoringMatchId: seasonStats.highestScoringMatch?.matchId,
     playerClubPosition,
+    playerClubPoints: playerClubRow?.points,
     promotedClubIds,
     regenPlayerIds: progressed.regenPlayerIds,
     relegatedClubIds,
     retiredPlayerIds: progressed.retiredPlayerIds,
     season: input.game.currentSeason.number,
+    topScorerGoals: seasonStats.topScorer?.value,
+    topScorerPlayerId: seasonStats.topScorer?.playerId,
     trophies: championClubId
       ? [{ competition: league.name, season: input.game.currentSeason.number }]
       : [],
   };
+  const records = updateWorldRecords(input.game.records, record, seasonStats);
   const news = createSeasonNews(record, input.game, league.name);
 
   return {
@@ -137,6 +162,7 @@ export function completeSeason(input: CompleteSeasonInput): GameState {
     },
     newsLog: [news, ...input.game.newsLog].slice(0, 200),
     players: progressed.players,
+    records,
     rngState: rng.getState(),
   };
 }
@@ -302,6 +328,148 @@ function awardSeason(input: {
   }
 
   return { clubs, achievementsUnlocked: achievements };
+}
+
+interface SeasonStats {
+  bestAttack?: ClubSeasonRecord;
+  bestDefense?: ClubSeasonRecord;
+  biggestWin?: MatchSeasonRecord;
+  highestScoringMatch?: MatchSeasonRecord;
+  topScorer?: PlayerSeasonRecord;
+}
+
+function calculateSeasonStats(input: {
+  matches: readonly Match[];
+  players: Record<string, Player>;
+  season: number;
+  table: ReturnType<typeof calculateLeagueTable>;
+}): SeasonStats {
+  const bestAttackRow = [...input.table].sort((a, b) => b.goalsFor - a.goalsFor)[0];
+  const bestDefenseRow = [...input.table].sort((a, b) => a.goalsAgainst - b.goalsAgainst)[0];
+  const goalCounts = new Map<string, number>();
+  let highestScoringMatch: MatchSeasonRecord | undefined;
+  let biggestWin: MatchSeasonRecord | undefined;
+
+  for (const match of input.matches) {
+    if (match.status !== "played" || !match.result) {
+      continue;
+    }
+
+    const totalGoals = match.result.homeGoals + match.result.awayGoals;
+    const margin = Math.abs(match.result.homeGoals - match.result.awayGoals);
+
+    if (!highestScoringMatch || totalGoals > highestScoringMatch.value) {
+      highestScoringMatch = {
+        awayId: match.awayId,
+        homeId: match.homeId,
+        matchId: match.id,
+        season: input.season,
+        value: totalGoals,
+      };
+    }
+
+    if (!biggestWin || margin > biggestWin.value) {
+      biggestWin = {
+        awayId: match.awayId,
+        homeId: match.homeId,
+        matchId: match.id,
+        season: input.season,
+        value: margin,
+      };
+    }
+
+    for (const event of match.result.events) {
+      if (event.type !== "goal") {
+        continue;
+      }
+
+      goalCounts.set(event.playerId, (goalCounts.get(event.playerId) ?? 0) + 1);
+    }
+  }
+
+  const topScorerEntry = Array.from(goalCounts.entries()).sort((a, b) => b[1] - a[1])[0];
+  const topScorerPlayer = topScorerEntry ? input.players[topScorerEntry[0]] : undefined;
+
+  return {
+    bestAttack: bestAttackRow
+      ? { clubId: bestAttackRow.clubId, season: input.season, value: bestAttackRow.goalsFor }
+      : undefined,
+    bestDefense: bestDefenseRow
+      ? {
+          clubId: bestDefenseRow.clubId,
+          season: input.season,
+          value: bestDefenseRow.goalsAgainst,
+        }
+      : undefined,
+    biggestWin,
+    highestScoringMatch,
+    topScorer:
+      topScorerEntry && topScorerEntry[1] > 0
+        ? {
+            clubId: topScorerPlayer?.clubId,
+            playerId: topScorerEntry[0],
+            season: input.season,
+            value: topScorerEntry[1],
+          }
+        : undefined,
+  };
+}
+
+function updateWorldRecords(
+  existing: WorldRecordBook | undefined,
+  record: SeasonRecord,
+  stats: SeasonStats,
+): WorldRecordBook {
+  const titleCounts = { ...(existing?.titleCounts ?? {}) };
+
+  if (record.championClubId) {
+    titleCounts[record.championClubId] = (titleCounts[record.championClubId] ?? 0) + 1;
+  }
+
+  return {
+    bestDefense: pickLowerRecord(existing?.bestDefense, stats.bestDefense),
+    biggestWin: pickHigherRecord(existing?.biggestWin, stats.biggestWin),
+    highestPoints: pickHigherRecord(
+      existing?.highestPoints,
+      record.championClubId && record.championPoints !== undefined
+        ? { clubId: record.championClubId, season: record.season, value: record.championPoints }
+        : undefined,
+    ),
+    highestScoringMatch: pickHigherRecord(existing?.highestScoringMatch, stats.highestScoringMatch),
+    mostGoalsFor: pickHigherRecord(existing?.mostGoalsFor, stats.bestAttack),
+    titleCounts,
+    topScorer: pickHigherRecord(existing?.topScorer, stats.topScorer),
+  };
+}
+
+function pickHigherRecord<T extends { value: number }>(
+  existing: T | undefined,
+  next: T | undefined,
+): T | undefined {
+  if (!next) {
+    return existing;
+  }
+
+  if (!existing || next.value > existing.value) {
+    return next;
+  }
+
+  return existing;
+}
+
+function pickLowerRecord<T extends { value: number }>(
+  existing: T | undefined,
+  next: T | undefined,
+): T | undefined {
+  if (!next) {
+    return existing;
+  }
+
+  if (!existing || next.value < existing.value) {
+    return next;
+  }
+
+  return existing;
 }
 
 function progressPlayers(input: {

@@ -6,6 +6,7 @@ import {
   Newspaper,
   Play,
   Save,
+  ScrollText,
   ShoppingBag,
   Users,
   Volume2,
@@ -35,6 +36,7 @@ const NAV_ITEMS: Array<{
   { view: "table", label: "Tabela", shortcut: "4", icon: BarChart3 },
   { view: "market", label: "Mercado", shortcut: "5", icon: ShoppingBag },
   { view: "news", label: "Noticias", shortcut: "6", icon: Newspaper },
+  { view: "records", label: "Recordes", shortcut: "7", icon: ScrollText },
 ];
 
 export function MainLayout({ children }: MainLayoutProps) {
@@ -118,6 +120,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   useHotkey("4", () => setActiveView("table"), { enabled: activeView !== "match-day" });
   useHotkey("5", () => setActiveView("market"), { enabled: activeView !== "match-day" });
   useHotkey("6", () => setActiveView("news"), { enabled: activeView !== "match-day" });
+  useHotkey("7", () => setActiveView("records"), { enabled: activeView !== "match-day" });
   useHotkey("?", openShortcuts);
   useHotkey("escape", goHomeOrClose, { enableOnFormTags: true });
   useHotkey("space", advanceRound, {
