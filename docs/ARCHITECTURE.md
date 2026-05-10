@@ -25,3 +25,20 @@ AppData/saves/slot-2.json
 AppData/saves/slot-3.json
 AppData/saves/autosave.json
 ```
+
+## UI e atalhos
+
+O Sprint 4 introduz uma camada de UI em React isolada em `src/ui` e estado de aplicacao em `src/store`.
+
+- `src/ui/layouts/MainLayout.tsx`: shell principal com sidebar, topbar, skip link e atalhos globais.
+- `src/ui/hotkeys/registry.ts`: fonte unica para a cheat-sheet de atalhos.
+- `src/ui/hotkeys/useHotkey.ts`: hook unico para captura de teclado com protecao para campos de formulario.
+- `src/store/game.store.ts`: carreira inicial deterministica e preferencias de UI/tatica persistidas via `zustand/persist`.
+
+Telas do Sprint 4:
+
+```txt
+src/ui/features/home/HomeView.tsx
+src/ui/features/squad/SquadView.tsx
+src/ui/features/tactics/TacticsView.tsx
+```
