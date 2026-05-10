@@ -156,6 +156,11 @@ export interface SeasonRecord {
   championClubId?: string;
   playerClubPosition?: number;
   trophies: Trophy[];
+  relegatedClubIds?: string[];
+  promotedClubIds?: string[];
+  retiredPlayerIds?: string[];
+  regenPlayerIds?: string[];
+  achievementsUnlocked?: string[];
 }
 
 export interface GameState {

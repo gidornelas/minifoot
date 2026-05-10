@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
 import { App } from "../App";
@@ -92,6 +92,29 @@ describe("App", () => {
       "aria-pressed",
       "true",
     );
+  });
+
+  it("shows the season end summary and starts the next season", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    for (let round = 1; round <= 38; round += 1) {
+      act(() => {
+        useGameStore.getState().advanceRound();
+      });
+    }
+
+    expect(
+      screen.getByRole("heading", { level: 2, name: /Fim da temporada 1/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Promovidos")).toBeInTheDocument();
+    expect(screen.getByText("Rebaixados")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Iniciar proxima temporada" }));
+
+    expect(screen.getByRole("heading", { name: "Home" })).toBeInTheDocument();
+    expect(useGameStore.getState().game.currentSeason.number).toBe(2);
+    expect(useGameStore.getState().game.currentSeason.finished).toBe(false);
   });
 
   it("creates a market offer from the transfer screen", async () => {

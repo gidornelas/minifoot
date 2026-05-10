@@ -85,3 +85,17 @@ src/ui/features/news-feed/NewsFeedView.tsx
 - `generateRoundNews()` prioriza partida do jogador, jogo com mais gols e eventos especiais; a rodada alterna teto de 2/3 manchetes para fechar uma temporada com 50-100 itens.
 - `generateTransferNews()` registra ofertas, contrapropostas, recusas e contratacoes aceitas no mesmo `newsLog`.
 - `NewsItem.tags` e `NewsItem.importance` permitem destacar visualmente zebras, viradas e negocios aceitos na Home e na tela `Noticias`.
+
+## Progressao de temporada
+
+O Sprint 8 concentra o rollover em engine pura e deixa o store apenas orquestrar a transicao de tela:
+
+```txt
+src/engine/progression/season.ts
+src/ui/features/season-end/SeasonEndView.tsx
+```
+
+- `completeSeason()` calcula tabela final, campeao, posicao do clube do usuario, premios, trofeu, promovidos/rebaixados, aposentadorias, regens e conquistas.
+- Como o MVP tem uma unica liga jogavel, o rebaixamento troca clubes CPU da zona por promovidos e preserva o clube do usuario para manter a carreira jogavel.
+- `startNextSeason()` recria o calendario com `seasonId` novo, reseta a semana para 1 e publica uma noticia especial de abertura.
+- `SeasonRecord` guarda ids de promovidos, rebaixados, aposentados, regens e conquistas para alimentar a tela `Fim de temporada`.

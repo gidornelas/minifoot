@@ -44,10 +44,13 @@ export function MainLayout({ children }: MainLayoutProps) {
   const advanceRound = useGameStore((state) => state.advanceRound);
   const acknowledgeAction = useGameStore((state) => state.acknowledgeAction);
   const club = game.clubs[game.playerClubId];
+  const seasonFinished = game.currentSeason.finished;
   const title =
     activeView === "match-day"
       ? "Match Day"
-      : (NAV_ITEMS.find((item) => item.view === activeView)?.label ?? "minifoot.");
+      : activeView === "season-end"
+        ? "Fim de temporada"
+        : (NAV_ITEMS.find((item) => item.view === activeView)?.label ?? "minifoot.");
 
   const closeShortcuts = useCallback(() => {
     setShortcutsOpen(false);
@@ -88,7 +91,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   useHotkey("escape", goHomeOrClose, { enableOnFormTags: true });
   useHotkey("space", advanceRound, {
     enableOnFormTags: true,
-    enabled: activeView !== "match-day",
+    enabled: activeView !== "match-day" && activeView !== "season-end",
   });
   useHotkey("mod+s", saveManual, { enableOnFormTags: true });
 
@@ -151,7 +154,8 @@ export function MainLayout({ children }: MainLayoutProps) {
             <div className="flex items-center gap-2">
               <button
                 aria-label="Avancar rodada"
-                className="hidden h-10 items-center gap-2 rounded-sm border border-border px-3 text-sm text-muted transition hover:border-border-strong hover:text-foreground sm:flex"
+                className="hidden h-10 items-center gap-2 rounded-sm border border-border px-3 text-sm text-muted transition hover:border-border-strong hover:text-foreground disabled:cursor-not-allowed disabled:opacity-45 sm:flex"
+                disabled={seasonFinished}
                 onClick={advanceRound}
                 title="Avancar rodada"
                 type="button"

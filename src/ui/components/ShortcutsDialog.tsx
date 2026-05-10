@@ -12,6 +12,7 @@ const SCOPE_LABELS = {
   market: "Mercado",
   "match-day": "Partida",
   news: "Noticias",
+  "season-end": "Fim de temporada",
   squad: "Elenco",
   tactics: "Tatica",
 };
@@ -54,7 +55,9 @@ export function ShortcutsDialog({ open, onClose }: ShortcutsDialogProps) {
           </button>
         </div>
         <div className="grid gap-5 p-5 sm:grid-cols-2">
-          {(["global", "squad", "tactics", "match-day", "market", "news"] as const).map((scope) => {
+          {(
+            ["global", "squad", "tactics", "match-day", "market", "news", "season-end"] as const
+          ).map((scope) => {
             const hotkeys = HOTKEYS.filter((hotkey) => hotkey.scope === scope);
 
             if (hotkeys.length === 0) {

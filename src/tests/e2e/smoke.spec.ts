@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("plays a Sprint 7 keyboard path", async ({ page }) => {
+test("plays a Sprint 8 keyboard path", async ({ page }) => {
   await page.goto("/");
   await page.evaluate(() => localStorage.clear());
   await page.reload();
@@ -34,4 +34,25 @@ test("plays a Sprint 7 keyboard path", async ({ page }) => {
     "aria-pressed",
     "true",
   );
+});
+
+test("finishes a season and starts the next one", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+
+  const advanceButton = page.getByRole("button", { name: "Avancar rodada" }).first();
+
+  for (let round = 1; round <= 38; round += 1) {
+    await advanceButton.click();
+  }
+
+  await expect(page.getByRole("heading", { level: 2, name: "Fim da temporada 1" })).toBeVisible();
+  await expect(page.getByText("Promovidos")).toBeVisible();
+  await expect(page.getByText("Rebaixados")).toBeVisible();
+
+  await page.getByRole("button", { name: "Iniciar proxima temporada" }).click();
+
+  await expect(page.getByRole("heading", { name: "Home" })).toBeVisible();
+  await expect(page.getByText("1/41")).toBeVisible();
 });

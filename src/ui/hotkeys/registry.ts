@@ -1,4 +1,11 @@
-export type HotkeyScope = "global" | "squad" | "tactics" | "match-day" | "market" | "news";
+export type HotkeyScope =
+  | "global"
+  | "squad"
+  | "tactics"
+  | "match-day"
+  | "market"
+  | "news"
+  | "season-end";
 
 export interface HotkeyEntry {
   id: string;
@@ -30,6 +37,7 @@ export const HOTKEYS: HotkeyEntry[] = [
   { id: "market.search", keys: ["/"], label: "Buscar jogador", scope: "market" },
   { id: "market.offer", keys: ["O"], label: "Fazer oferta", scope: "market" },
   { id: "news.search", keys: ["/"], label: "Buscar noticia", scope: "news" },
+  { id: "season.next", keys: ["Enter"], label: "Proxima temporada", scope: "season-end" },
 ];
 
 export function hotkeysByScope(scope: HotkeyScope): HotkeyEntry[] {

@@ -153,6 +153,11 @@ export const SeasonRecordSchema = z.object({
   championClubId: z.string().min(1).optional(),
   playerClubPosition: z.number().int().positive().optional(),
   trophies: z.array(TrophySchema),
+  relegatedClubIds: z.array(z.string().min(1)).optional(),
+  promotedClubIds: z.array(z.string().min(1)).optional(),
+  retiredPlayerIds: z.array(z.string().min(1)).optional(),
+  regenPlayerIds: z.array(z.string().min(1)).optional(),
+  achievementsUnlocked: z.array(z.string().min(1)).optional(),
 });
 
 export const GameStateSchema = z.object({

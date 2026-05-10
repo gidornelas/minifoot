@@ -18,7 +18,7 @@ export interface SimulateSeasonInput {
   rng: Rng;
 }
 
-export function createLeagueSchedule(league: League): Match[] {
+export function createLeagueSchedule(league: League, seasonNumber = 1): Match[] {
   if (league.clubIds.length % 2 !== 0) {
     throw new Error("Round-robin schedule requires an even number of clubs.");
   }
@@ -42,7 +42,7 @@ export function createLeagueSchedule(league: League): Match[] {
       const awayId = shouldFlipHome ? first : second;
       const round = roundIndex + 1;
 
-      firstLeg.push(createScheduledMatch(league.id, round, homeId, awayId));
+      firstLeg.push(createScheduledMatch(league.id, seasonNumber, round, homeId, awayId));
     }
 
     const fixed = teams[0];
@@ -57,7 +57,13 @@ export function createLeagueSchedule(league: League): Match[] {
   }
 
   const secondLeg = firstLeg.map((match) =>
-    createScheduledMatch(league.id, match.round + roundsPerLeg, match.awayId, match.homeId),
+    createScheduledMatch(
+      league.id,
+      seasonNumber,
+      match.round + roundsPerLeg,
+      match.awayId,
+      match.homeId,
+    ),
   );
 
   return [...firstLeg, ...secondLeg];
@@ -107,13 +113,16 @@ export function simulateSeason(input: SimulateSeasonInput): Match[] {
 
 function createScheduledMatch(
   competitionId: string,
+  seasonNumber: number,
   round: number,
   homeId: string,
   awayId: string,
 ): Match {
+  const seasonId = `season-${seasonNumber}`;
+
   return {
-    id: `${competitionId}-r${round}-${homeId}-${awayId}`,
-    seasonId: "season-1",
+    id: `${seasonId}-${competitionId}-r${round}-${homeId}-${awayId}`,
+    seasonId,
     competitionId,
     round,
     homeId,

@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Club, Formation, GameState, Mentality, Player } from "../engine";
 import {
+  completeSeason,
   createLeagueSchedule,
   createRng,
   evaluateTransferOffer,
@@ -11,10 +12,19 @@ import {
   generateTransferNews,
   isTransferWindowOpen,
   simulateRound,
+  startNextSeason,
 } from "../engine";
 import { CURRENT_SAVE_VERSION } from "../persistence";
 
-export type AppView = "home" | "squad" | "tactics" | "match-day" | "table" | "market" | "news";
+export type AppView =
+  | "home"
+  | "squad"
+  | "tactics"
+  | "match-day"
+  | "table"
+  | "market"
+  | "news"
+  | "season-end";
 export type SquadSortKey = "name" | "position" | "overall" | "potential" | "fitness" | "value";
 export type SortDirection = "asc" | "desc";
 
@@ -73,6 +83,7 @@ interface GameStoreActions {
   rejectTransferOffer: (offerId: string) => void;
   runCpuTransferWindow: () => void;
   advanceRound: () => void;
+  startNextSeason: () => void;
   resetCareer: () => void;
   saveManual: () => void;
   acknowledgeAction: () => void;
@@ -361,6 +372,13 @@ export const useGameStore = create<GameStore>()(
           const round = state.game.currentSeason.currentWeek;
           const maxRound = league.clubIds.length * 2 - 2;
 
+          if (state.game.currentSeason.finished) {
+            return {
+              activeView: "season-end",
+              lastAction: "Temporada encerrada",
+            };
+          }
+
           if (round > maxRound) {
             return {
               game: {
@@ -400,22 +418,70 @@ export const useGameStore = create<GameStore>()(
             roundNews.length > 0
               ? [...roundNews, ...state.game.newsLog].slice(0, 200)
               : state.game.newsLog;
+          const gameAfterRound: GameState = {
+            ...state.game,
+            rngState: rng.getState(),
+            currentSeason: {
+              ...state.game.currentSeason,
+              currentWeek: round + 1,
+              finished: round + 1 > maxRound,
+            },
+            matches,
+            newsLog,
+          };
+
+          if (round + 1 > maxRound) {
+            const completedGame = completeSeason({
+              game: gameAfterRound,
+              leagueId: league.id,
+            });
+
+            return {
+              activeView: "season-end",
+              game: completedGame,
+              lastAction: "Temporada encerrada",
+              lastRoundMatchIds: playedMatches.map((match) => match.id),
+              tactic: {
+                ...state.tactic,
+                lineup: state.tactic.lineup.filter((playerId) => completedGame.players[playerId]),
+                savedAt: Date.now(),
+              },
+            };
+          }
 
           return {
             activeView: "match-day",
-            game: {
-              ...state.game,
-              rngState: rng.getState(),
-              currentSeason: {
-                ...state.game.currentSeason,
-                currentWeek: round + 1,
-                finished: round + 1 > maxRound,
-              },
-              matches,
-              newsLog,
-            },
+            game: gameAfterRound,
             lastAction: `Rodada ${round} jogada`,
             lastRoundMatchIds: playedMatches.map((match) => match.id),
+          };
+        });
+      },
+      startNextSeason: () => {
+        set((state) => {
+          const league = Object.values(state.game.leagues)[0];
+
+          if (!league || !state.game.currentSeason.finished) {
+            return { lastAction: "Temporada ainda em andamento" };
+          }
+
+          const game = startNextSeason({
+            game: state.game,
+            leagueId: league.id,
+          });
+
+          return {
+            activeView: "home",
+            cpuTransfersThisWindow: 0,
+            game,
+            lastAction: `Temporada ${game.currentSeason.number} iniciada`,
+            lastRoundMatchIds: [],
+            tactic: {
+              ...state.tactic,
+              lineup: pickBestLineup(game),
+              savedAt: Date.now(),
+            },
+            transferOffers: [],
           };
         });
       },
