@@ -1,0 +1,10 @@
+# Changelog
+
+## 0.0.0
+
+- Setup inicial do Sprint 0.
+- `DESIGN.md` convertido para o formato `design.md` com front matter YAML, tokens de design e validacao via CLI.
+- Sprint 1: tipos de dominio, schemas Zod, RNG Mulberry32 e geracao deterministica de liga com 20 clubes e 440 jogadores.
+- Identidade visual adaptada para `minifoot.` com tokens Ink/Pitch/Whistle/Card, tipografia Geist e monograma `mf.`.
+- Sprint 2: simulacao deterministica de partidas, eventos narrativos em PT-BR, calendario de 38 rodadas, simulacao de rodada/temporada e tabela de classificacao.
+- Sprint 3: persistencia JSON com migrations v1, slots de save, delete, autosave debounced e adapter Tauri FS em `AppData/saves`.
