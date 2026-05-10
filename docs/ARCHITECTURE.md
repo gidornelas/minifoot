@@ -54,3 +54,19 @@ src/ui/features/league-table/LeagueTableView.tsx
 simula a rodada atual pela engine pura, atualiza `matches`, incrementa `currentWeek`, registra
 noticia da partida do jogador e abre `match-day`. Na tela de partida, `Espaco` revela eventos;
 fora dela, `Espaco` avanca a proxima rodada.
+
+## Mercado
+
+O Sprint 6 separa regras de transferencia da UI:
+
+```txt
+src/engine/transfers/valuation.ts
+src/engine/transfers/market.ts
+src/ui/features/transfers/TransferMarketView.tsx
+```
+
+- `calculateTransferValue()` calcula valor por overall, potencial, idade, contrato e traits.
+- `isTransferWindowOpen()` libera semanas 1-3 e 19-20.
+- `evaluateTransferOffer()` retorna aceita, contraproposta ou recusa.
+- `generateCpuTransferDeals()` cria movimentos deterministas de clubes CPU a partir de necessidades por posicao.
+- `src/store/game.store.ts` aplica transferencias em `clubs`, `players`, orcamento e `newsLog`.

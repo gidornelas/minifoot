@@ -2,7 +2,10 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
 import { App } from "../App";
+import { calculateTransferValue } from "../engine";
 import { useGameStore } from "../store/game.store";
+import { playerFullName } from "../store/selectors";
+import { TransferMarketView } from "../ui/features/transfers/TransferMarketView";
 
 describe("App", () => {
   beforeEach(() => {
@@ -71,5 +74,37 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "Ver tabela" }));
 
     expect(screen.getByRole("heading", { name: "Serie A Minimalista" })).toBeInTheDocument();
+  });
+
+  it("creates a market offer from the transfer screen", async () => {
+    const user = userEvent.setup();
+    const state = useGameStore.getState();
+    const playerClub = state.game.clubs[state.game.playerClubId];
+
+    if (!playerClub) {
+      throw new Error("Expected player club.");
+    }
+
+    const candidate = Object.values(state.game.players).find(
+      (player) =>
+        player.clubId !== state.game.playerClubId &&
+        calculateTransferValue(player) < playerClub.budget * 0.55,
+    );
+
+    if (!candidate) {
+      throw new Error("Expected affordable transfer candidate.");
+    }
+
+    render(<TransferMarketView />);
+
+    await user.type(
+      screen.getByPlaceholderText("Buscar jogador ou clube"),
+      playerFullName(candidate),
+    );
+    await user.click(screen.getAllByRole("button", { name: "Oferta" })[0] as HTMLElement);
+    await user.click(screen.getByRole("button", { name: "Enviar oferta" }));
+
+    expect(useGameStore.getState().transferOffers).toHaveLength(1);
+    expect(screen.getByText(/Contraproposta|recusada|contratado/i)).toBeInTheDocument();
   });
 });

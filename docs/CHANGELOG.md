@@ -10,3 +10,4 @@
 - Sprint 3: persistencia JSON com migrations v1, slots de save, delete, autosave debounced e adapter Tauri FS em `AppData/saves`.
 - Sprint 4: shell jogavel com sidebar, Home, Elenco ordenavel por teclado, Tatica com formacao/XI persistidos, atalhos globais e cheat-sheet gerada pelo registro central.
 - Sprint 5: Match Day com narrativa por evento, velocidades por botoes/atalhos, placar animado, tabela filtravel e avancar rodada integrado a engine.
+- Sprint 6: mercado de transferencias com janela aberta/fechada, valuation, ofertas/contrapropostas, compras, transferencias CPU e tela filtravel.

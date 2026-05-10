@@ -5,6 +5,7 @@ import { LeagueTableView } from "./ui/features/league-table/LeagueTableView";
 import { MatchDayView } from "./ui/features/match-day/MatchDayView";
 import { SquadView } from "./ui/features/squad/SquadView";
 import { TacticsView } from "./ui/features/tactics/TacticsView";
+import { TransferMarketView } from "./ui/features/transfers/TransferMarketView";
 import { MainLayout } from "./ui/layouts/MainLayout";
 
 export function App() {
@@ -17,7 +18,7 @@ export function App() {
       {activeView === "tactics" ? <TacticsView /> : null}
       {activeView === "match-day" ? <MatchDayView /> : null}
       {activeView === "table" ? <LeagueTableView /> : null}
-      {activeView === "market" ? <PlaceholderView eyebrow="Sprint 6" title="Mercado" /> : null}
+      {activeView === "market" ? <TransferMarketView /> : null}
       {activeView === "news" ? <PlaceholderView eyebrow="Sprint 7" title="Noticias" /> : null}
     </MainLayout>
   );

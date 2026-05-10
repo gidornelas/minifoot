@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("plays a Sprint 5 keyboard path", async ({ page }) => {
+test("plays a Sprint 6 keyboard path", async ({ page }) => {
   await page.goto("/");
   await page.evaluate(() => localStorage.clear());
   await page.reload();
@@ -20,4 +20,10 @@ test("plays a Sprint 5 keyboard path", async ({ page }) => {
   await page.keyboard.press("Space");
   await page.getByRole("button", { name: "Ver tabela" }).click();
   await expect(page.getByRole("heading", { name: "Serie A Minimalista" })).toBeVisible();
+
+  await page.keyboard.press("5");
+  await expect(page.getByRole("heading", { name: "Janela aberta" })).toBeVisible();
+  await page.getByRole("button", { name: "Oferta" }).first().click();
+  await page.getByRole("button", { name: "Enviar oferta" }).click();
+  await expect(page.getByText(/Contraproposta recebida|Oferta recusada|contratado/i)).toBeVisible();
 });

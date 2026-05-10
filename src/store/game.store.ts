@@ -1,7 +1,15 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { Formation, GameState, Mentality } from "../engine";
-import { createLeagueSchedule, createRng, generateLeague, simulateRound } from "../engine";
+import type { Club, Formation, GameState, Mentality, Player } from "../engine";
+import {
+  createLeagueSchedule,
+  createRng,
+  evaluateTransferOffer,
+  generateCpuTransferDeals,
+  generateLeague,
+  isTransferWindowOpen,
+  simulateRound,
+} from "../engine";
 import { CURRENT_SAVE_VERSION } from "../persistence";
 
 export type AppView = "home" | "squad" | "tactics" | "match-day" | "table" | "market" | "news";
@@ -15,6 +23,22 @@ export interface TacticState {
   savedAt: number;
 }
 
+export type TransferOfferStatus = "accepted" | "counter" | "rejected";
+
+export interface TransferOffer {
+  id: string;
+  playerId: string;
+  fromClubId: string;
+  toClubId: string;
+  amount: number;
+  counterAmount?: number;
+  wageDemand: number;
+  status: TransferOfferStatus;
+  reason: string;
+  createdWeek: number;
+  counterCount: number;
+}
+
 interface GameStoreState {
   activeView: AppView;
   game: GameState;
@@ -25,6 +49,8 @@ interface GameStoreState {
   selectedPlayerId: string | null;
   tactic: TacticState;
   pendingBenchPlayerId: string | null;
+  transferOffers: TransferOffer[];
+  cpuTransfersThisWindow: number;
   lastRoundMatchIds: string[];
   lastAction: string;
 }
@@ -40,6 +66,10 @@ interface GameStoreActions {
   pickBenchPlayer: (playerId: string | null) => void;
   placePendingPlayer: (lineupIndex: number) => void;
   moveStarter: (fromIndex: number, toIndex: number) => void;
+  makeTransferOffer: (playerId: string, amount: number) => void;
+  acceptCounterOffer: (offerId: string) => void;
+  rejectTransferOffer: (offerId: string) => void;
+  runCpuTransferWindow: () => void;
   advanceRound: () => void;
   resetCareer: () => void;
   saveManual: () => void;
@@ -69,6 +99,8 @@ export const useGameStore = create<GameStore>()(
         savedAt: 0,
       },
       pendingBenchPlayerId: null,
+      transferOffers: [],
+      cpuTransfersThisWindow: 0,
       lastRoundMatchIds: [],
       lastAction: "",
       setActiveView: (view) => {
@@ -165,6 +197,157 @@ export const useGameStore = create<GameStore>()(
           };
         });
       },
+      makeTransferOffer: (playerId, amount) => {
+        set((state) => {
+          if (!isTransferWindowOpen(state.game.currentSeason.currentWeek)) {
+            return { lastAction: "Janela fechada" };
+          }
+
+          const player = state.game.players[playerId];
+          const fromClub = player?.clubId ? state.game.clubs[player.clubId] : undefined;
+          const toClub = state.game.clubs[state.game.playerClubId];
+
+          if (!player || !fromClub || !toClub || fromClub.id === toClub.id) {
+            return { lastAction: "Oferta invalida" };
+          }
+
+          const decision = evaluateTransferOffer({
+            buyingClub: toClub,
+            counterCount: 0,
+            offerAmount: amount,
+            player,
+            sellingClub: fromClub,
+          });
+          const offer: TransferOffer = {
+            amount,
+            counterAmount: decision.status === "counter" ? decision.askingPrice : undefined,
+            counterCount: decision.status === "counter" ? 1 : 0,
+            createdWeek: state.game.currentSeason.currentWeek,
+            fromClubId: fromClub.id,
+            id: `offer-${player.id}-${state.game.currentSeason.currentWeek}-${state.transferOffers.length + 1}`,
+            playerId,
+            reason: decision.reason,
+            status: decision.status,
+            toClubId: toClub.id,
+            wageDemand: decision.wageDemand,
+          };
+
+          if (decision.status !== "accepted") {
+            return {
+              game: {
+                ...state.game,
+                newsLog: [createTransferNews(state.game, offer), ...state.game.newsLog].slice(
+                  0,
+                  200,
+                ),
+              },
+              lastAction:
+                decision.status === "counter" ? "Contraproposta recebida" : "Oferta recusada",
+              transferOffers: [offer, ...state.transferOffers],
+            };
+          }
+
+          const game = applyTransfer(state.game, {
+            fee: amount,
+            fromClubId: fromClub.id,
+            playerId,
+            toClubId: toClub.id,
+          });
+
+          return {
+            game: {
+              ...game,
+              newsLog: [createTransferNews(game, offer), ...game.newsLog].slice(0, 200),
+            },
+            lastAction: `${player.firstName} ${player.lastName} contratado`,
+            tactic: {
+              ...state.tactic,
+              lineup: state.tactic.lineup.filter(
+                (starterId) => game.players[starterId]?.clubId === toClub.id,
+              ),
+              savedAt: Date.now(),
+            },
+            transferOffers: [offer, ...state.transferOffers],
+          };
+        });
+      },
+      acceptCounterOffer: (offerId) => {
+        set((state) => {
+          const offer = state.transferOffers.find((entry) => entry.id === offerId);
+
+          if (!offer?.counterAmount) {
+            return { lastAction: "Contraproposta indisponivel" };
+          }
+
+          const player = state.game.players[offer.playerId];
+          const buyer = state.game.clubs[offer.toClubId];
+
+          if (!player || !buyer || buyer.budget < offer.counterAmount) {
+            return { lastAction: "Orcamento insuficiente" };
+          }
+
+          const acceptedOffer: TransferOffer = {
+            ...offer,
+            amount: offer.counterAmount,
+            status: "accepted",
+          };
+          const game = applyTransfer(state.game, {
+            fee: offer.counterAmount,
+            fromClubId: offer.fromClubId,
+            playerId: offer.playerId,
+            toClubId: offer.toClubId,
+          });
+
+          return {
+            game: {
+              ...game,
+              newsLog: [createTransferNews(game, acceptedOffer), ...game.newsLog].slice(0, 200),
+            },
+            lastAction: `${player.firstName} ${player.lastName} contratado`,
+            transferOffers: state.transferOffers.map((entry) =>
+              entry.id === offerId ? acceptedOffer : entry,
+            ),
+          };
+        });
+      },
+      rejectTransferOffer: (offerId) => {
+        set((state) => ({
+          lastAction: "Negociacao encerrada",
+          transferOffers: state.transferOffers.map((offer) =>
+            offer.id === offerId ? { ...offer, status: "rejected" } : offer,
+          ),
+        }));
+      },
+      runCpuTransferWindow: () => {
+        set((state) => {
+          if (!isTransferWindowOpen(state.game.currentSeason.currentWeek)) {
+            return { lastAction: "Janela fechada" };
+          }
+
+          const rng = createRng(state.game.rngState);
+          const deals = generateCpuTransferDeals({
+            clubs: state.game.clubs,
+            maxDeals: 8,
+            players: state.game.players,
+            rng,
+          });
+          const game = deals.reduce(
+            (currentGame, deal) => applyTransfer(currentGame, deal),
+            state.game,
+          );
+          const newsLog = deals.map((deal) => createCpuTransferNews(game, deal));
+
+          return {
+            cpuTransfersThisWindow: state.cpuTransfersThisWindow + deals.length,
+            game: {
+              ...game,
+              rngState: rng.getState(),
+              newsLog: [...newsLog, ...game.newsLog].slice(0, 200),
+            },
+            lastAction: `${deals.length} transferencias CPU`,
+          };
+        });
+      },
       advanceRound: () => {
         set((state) => {
           const league = Object.values(state.game.leagues)[0];
@@ -241,6 +424,8 @@ export const useGameStore = create<GameStore>()(
           lastRoundMatchIds: [],
           pendingBenchPlayerId: null,
           selectedPlayerId: null,
+          transferOffers: [],
+          cpuTransfersThisWindow: 0,
           squadSort: {
             key: "overall",
             direction: "desc",
@@ -264,10 +449,12 @@ export const useGameStore = create<GameStore>()(
       name: "minifoot-career-ui",
       partialize: (state) => ({
         activeView: state.activeView,
+        cpuTransfersThisWindow: state.cpuTransfersThisWindow,
         game: state.game,
         lastRoundMatchIds: state.lastRoundMatchIds,
         squadSort: state.squadSort,
         tactic: state.tactic,
+        transferOffers: state.transferOffers,
       }),
     },
   ),
@@ -360,6 +547,93 @@ function createMatchNews(
     body: match.result.events[0]?.description ?? "Partida sem grandes rupturas no roteiro.",
     createdAt: round,
     relatedClubId: game.playerClubId,
+  };
+}
+
+function createTransferNews(game: GameState, offer: TransferOffer): GameState["newsLog"][number] {
+  const player = game.players[offer.playerId];
+  const fromClub = game.clubs[offer.fromClubId];
+  const toClub = game.clubs[offer.toClubId];
+  const playerName = player ? `${player.firstName} ${player.lastName}` : "Jogador";
+
+  return {
+    body:
+      offer.status === "counter"
+        ? `${fromClub?.shortName ?? "CPU"} pediu contraproposta de ${offer.counterAmount}.`
+        : offer.reason,
+    createdAt: game.currentSeason.currentWeek,
+    id: `news-transfer-${offer.id}-${offer.status}`,
+    relatedClubId: toClub?.id,
+    relatedPlayerId: offer.playerId,
+    title:
+      offer.status === "accepted"
+        ? `${playerName} chega ao ${toClub?.shortName ?? "clube"}`
+        : `${fromClub?.shortName ?? "CPU"} responde por ${playerName}`,
+    type: "transfer",
+    week: game.currentSeason.currentWeek,
+  };
+}
+
+function createCpuTransferNews(
+  game: GameState,
+  deal: { playerId: string; fromClubId: string; toClubId: string; fee: number },
+): GameState["newsLog"][number] {
+  const player = game.players[deal.playerId];
+  const fromClub = game.clubs[deal.fromClubId];
+  const toClub = game.clubs[deal.toClubId];
+  const playerName = player ? `${player.firstName} ${player.lastName}` : "Jogador";
+
+  return {
+    body: `${fromClub?.shortName ?? "CPU"} recebeu ${deal.fee} pela negociacao.`,
+    createdAt: game.currentSeason.currentWeek,
+    id: `news-cpu-transfer-${deal.playerId}-${deal.toClubId}-${game.currentSeason.currentWeek}`,
+    relatedClubId: toClub?.id,
+    relatedPlayerId: deal.playerId,
+    title: `${playerName} assina com ${toClub?.shortName ?? "CPU"}`,
+    type: "transfer",
+    week: game.currentSeason.currentWeek,
+  };
+}
+
+function applyTransfer(
+  game: GameState,
+  deal: { playerId: string; fromClubId: string; toClubId: string; fee: number },
+): GameState {
+  const player = game.players[deal.playerId];
+  const fromClub = game.clubs[deal.fromClubId];
+  const toClub = game.clubs[deal.toClubId];
+
+  if (!player || !fromClub || !toClub || fromClub.id === toClub.id) {
+    return game;
+  }
+
+  const updatedFromClub: Club = {
+    ...fromClub,
+    budget: fromClub.budget + deal.fee,
+    squad: fromClub.squad.filter((playerId) => playerId !== deal.playerId),
+  };
+  const updatedToClub: Club = {
+    ...toClub,
+    budget: Math.max(0, toClub.budget - deal.fee),
+    squad: [...toClub.squad, deal.playerId],
+  };
+  const updatedPlayer: Player = {
+    ...player,
+    clubId: deal.toClubId,
+    salary: Math.round(player.salary * 1.12),
+  };
+
+  return {
+    ...game,
+    clubs: {
+      ...game.clubs,
+      [deal.fromClubId]: updatedFromClub,
+      [deal.toClubId]: updatedToClub,
+    },
+    players: {
+      ...game.players,
+      [deal.playerId]: updatedPlayer,
+    },
   };
 }
 
