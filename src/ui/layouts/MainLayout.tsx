@@ -4,6 +4,7 @@ import {
   ClipboardList,
   Home,
   Newspaper,
+  Play,
   Save,
   ShoppingBag,
   Users,
@@ -40,8 +41,13 @@ export function MainLayout({ children }: MainLayoutProps) {
   const lastAction = useGameStore((state) => state.lastAction);
   const setActiveView = useGameStore((state) => state.setActiveView);
   const saveManual = useGameStore((state) => state.saveManual);
+  const advanceRound = useGameStore((state) => state.advanceRound);
   const acknowledgeAction = useGameStore((state) => state.acknowledgeAction);
   const club = game.clubs[game.playerClubId];
+  const title =
+    activeView === "match-day"
+      ? "Match Day"
+      : (NAV_ITEMS.find((item) => item.view === activeView)?.label ?? "minifoot.");
 
   const closeShortcuts = useCallback(() => {
     setShortcutsOpen(false);
@@ -72,15 +78,18 @@ export function MainLayout({ children }: MainLayoutProps) {
     };
   }, [acknowledgeAction, lastAction]);
 
-  useHotkey("1", () => setActiveView("home"));
-  useHotkey("2", () => setActiveView("squad"));
-  useHotkey("3", () => setActiveView("tactics"));
-  useHotkey("4", () => setActiveView("table"));
-  useHotkey("5", () => setActiveView("market"));
-  useHotkey("6", () => setActiveView("news"));
+  useHotkey("1", () => setActiveView("home"), { enabled: activeView !== "match-day" });
+  useHotkey("2", () => setActiveView("squad"), { enabled: activeView !== "match-day" });
+  useHotkey("3", () => setActiveView("tactics"), { enabled: activeView !== "match-day" });
+  useHotkey("4", () => setActiveView("table"), { enabled: activeView !== "match-day" });
+  useHotkey("5", () => setActiveView("market"), { enabled: activeView !== "match-day" });
+  useHotkey("6", () => setActiveView("news"), { enabled: activeView !== "match-day" });
   useHotkey("?", openShortcuts);
   useHotkey("escape", goHomeOrClose, { enableOnFormTags: true });
-  useHotkey("space", saveManual);
+  useHotkey("space", advanceRound, {
+    enableOnFormTags: true,
+    enabled: activeView !== "match-day",
+  });
   useHotkey("mod+s", saveManual, { enableOnFormTags: true });
 
   return (
@@ -137,11 +146,19 @@ export function MainLayout({ children }: MainLayoutProps) {
           <header className="sticky top-0 z-sticky flex items-center justify-between border-b border-border bg-background/95 px-4 py-3 backdrop-blur lg:px-6">
             <div className="min-w-0">
               <p className="truncate text-sm text-muted">{club?.name ?? "Clube"}</p>
-              <h1 className="truncate font-display text-xl font-semibold">
-                {NAV_ITEMS.find((item) => item.view === activeView)?.label ?? "minifoot."}
-              </h1>
+              <h1 className="truncate font-display text-xl font-semibold">{title}</h1>
             </div>
             <div className="flex items-center gap-2">
+              <button
+                aria-label="Avancar rodada"
+                className="hidden h-10 items-center gap-2 rounded-sm border border-border px-3 text-sm text-muted transition hover:border-border-strong hover:text-foreground sm:flex"
+                onClick={advanceRound}
+                title="Avancar rodada"
+                type="button"
+              >
+                <Play aria-hidden="true" size={16} />
+                Rodada
+              </button>
               <button
                 aria-label="Salvar carreira"
                 className="flex h-10 w-10 items-center justify-center rounded-sm border border-border text-muted transition hover:border-border-strong hover:text-foreground"

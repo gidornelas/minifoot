@@ -42,3 +42,15 @@ src/ui/features/home/HomeView.tsx
 src/ui/features/squad/SquadView.tsx
 src/ui/features/tactics/TacticsView.tsx
 ```
+
+Telas do Sprint 5:
+
+```txt
+src/ui/features/match-day/MatchDayView.tsx
+src/ui/features/league-table/LeagueTableView.tsx
+```
+
+`advanceRound()` vive em `src/store/game.store.ts`: cria um RNG a partir do estado salvo,
+simula a rodada atual pela engine pura, atualiza `matches`, incrementa `currentWeek`, registra
+noticia da partida do jogador e abre `match-day`. Na tela de partida, `Espaco` revela eventos;
+fora dela, `Espaco` avanca a proxima rodada.

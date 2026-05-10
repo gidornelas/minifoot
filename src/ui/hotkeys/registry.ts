@@ -22,6 +22,11 @@ export const HOTKEYS: HotkeyEntry[] = [
   { id: "tactics.reset", keys: ["R"], label: "Resetar tatica", scope: "tactics" },
   { id: "tactics.auto", keys: ["A"], label: "Auto-escalacao", scope: "tactics" },
   { id: "tactics.save", keys: ["S"], label: "Salvar preset", scope: "tactics" },
+  { id: "match.next", keys: ["Espaco"], label: "Proximo evento", scope: "match-day" },
+  { id: "match.speed.1", keys: ["1"], label: "Velocidade 1x", scope: "match-day" },
+  { id: "match.speed.2", keys: ["2"], label: "Velocidade 2x", scope: "match-day" },
+  { id: "match.speed.5", keys: ["3"], label: "Velocidade 5x", scope: "match-day" },
+  { id: "match.speed.10", keys: ["4"], label: "Velocidade 10x", scope: "match-day" },
 ];
 
 export function hotkeysByScope(scope: HotkeyScope): HotkeyEntry[] {

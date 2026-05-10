@@ -1,4 +1,4 @@
-import { CalendarDays, Gauge, Trophy, WalletCards } from "lucide-react";
+import { CalendarDays, Gauge, Play, Trophy, WalletCards } from "lucide-react";
 import { useMemo } from "react";
 import { calculateLeagueTable } from "../../../engine";
 import { useGameStore } from "../../../store/game.store";
@@ -6,6 +6,7 @@ import { formatCurrency, formatInteger } from "../../formatters";
 
 export function HomeView() {
   const game = useGameStore((state) => state.game);
+  const advanceRound = useGameStore((state) => state.advanceRound);
   const club = game.clubs[game.playerClubId];
   const league = Object.values(game.leagues)[0];
   const table = useMemo(
@@ -48,9 +49,19 @@ export function HomeView() {
           <div className="min-h-[330px] overflow-hidden rounded-sm border border-border bg-surface">
             <div className="border-b border-border px-5 py-4">
               <p className="text-xs uppercase text-muted">Proximo compromisso</p>
-              <h2 className="mt-1 font-display text-xl font-semibold">
-                {opponent ? `${club.shortName} vs ${opponent.shortName}` : league.name}
-              </h2>
+              <div className="mt-1 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <h2 className="font-display text-xl font-semibold">
+                  {opponent ? `${club.shortName} vs ${opponent.shortName}` : league.name}
+                </h2>
+                <button
+                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-sm bg-accent px-3 text-sm font-semibold text-accent-contrast transition hover:bg-accent-hover"
+                  onClick={advanceRound}
+                  type="button"
+                >
+                  <Play aria-hidden="true" size={16} />
+                  Avancar rodada
+                </button>
+              </div>
             </div>
             <div className="grid min-h-[250px] place-items-center bg-[linear-gradient(90deg,rgba(74,222,128,0.08)_1px,transparent_1px),linear-gradient(rgba(74,222,128,0.08)_1px,transparent_1px)] bg-[size:48px_48px] p-5">
               <div className="relative aspect-[16/10] w-full max-w-xl rounded-sm border border-pitch/60 bg-pitch/10">

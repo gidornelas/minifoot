@@ -9,3 +9,4 @@
 - Sprint 2: simulacao deterministica de partidas, eventos narrativos em PT-BR, calendario de 38 rodadas, simulacao de rodada/temporada e tabela de classificacao.
 - Sprint 3: persistencia JSON com migrations v1, slots de save, delete, autosave debounced e adapter Tauri FS em `AppData/saves`.
 - Sprint 4: shell jogavel com sidebar, Home, Elenco ordenavel por teclado, Tatica com formacao/XI persistidos, atalhos globais e cheat-sheet gerada pelo registro central.
+- Sprint 5: Match Day com narrativa por evento, velocidades por botoes/atalhos, placar animado, tabela filtravel e avancar rodada integrado a engine.

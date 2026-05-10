@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
 import { App } from "../App";
@@ -7,12 +7,7 @@ import { useGameStore } from "../store/game.store";
 describe("App", () => {
   beforeEach(() => {
     localStorage.clear();
-    const store = useGameStore.getState();
-    store.setActiveView("home");
-    store.selectPlayer(null);
-    store.pickBenchPlayer(null);
-    store.resetTactic();
-    store.acknowledgeAction();
+    useGameStore.getState().resetCareer();
   });
 
   it("renders the Sprint 4 dashboard shell", () => {
@@ -60,5 +55,21 @@ describe("App", () => {
 
     expect(useGameStore.getState().tactic.formation).toBe("4-3-3");
     expect(localStorage.getItem("minifoot-career-ui")).toContain("4-3-3");
+  });
+
+  it("advances a round from the keyboard and opens match day", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    fireEvent.keyDown(window, { code: "Space", key: " " });
+
+    expect(screen.getByRole("heading", { name: "Match Day" })).toBeInTheDocument();
+    expect(screen.getByText("Rodada 1")).toBeInTheDocument();
+    expect(useGameStore.getState().lastRoundMatchIds).toHaveLength(10);
+    expect(useGameStore.getState().game.currentSeason.currentWeek).toBe(2);
+
+    await user.click(screen.getByRole("button", { name: "Ver tabela" }));
+
+    expect(screen.getByRole("heading", { name: "Serie A Minimalista" })).toBeInTheDocument();
   });
 });
