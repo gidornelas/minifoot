@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("plays a Sprint 6 keyboard path", async ({ page }) => {
+test("plays a Sprint 7 keyboard path", async ({ page }) => {
   await page.goto("/");
   await page.evaluate(() => localStorage.clear());
   await page.reload();
@@ -26,4 +26,12 @@ test("plays a Sprint 6 keyboard path", async ({ page }) => {
   await page.getByRole("button", { name: "Oferta" }).first().click();
   await page.getByRole("button", { name: "Enviar oferta" }).click();
   await expect(page.getByText(/Contraproposta recebida|Oferta recusada|contratado/i)).toBeVisible();
+
+  await page.keyboard.press("6");
+  await expect(page.getByRole("heading", { level: 2, name: "Noticias" })).toBeVisible();
+  await page.getByRole("button", { name: "Especiais" }).click();
+  await expect(page.getByRole("button", { name: "Especiais" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
 });

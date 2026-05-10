@@ -9,7 +9,9 @@ interface ShortcutsDialogProps {
 
 const SCOPE_LABELS = {
   global: "Global",
+  market: "Mercado",
   "match-day": "Partida",
+  news: "Noticias",
   squad: "Elenco",
   tactics: "Tatica",
 };
@@ -52,7 +54,7 @@ export function ShortcutsDialog({ open, onClose }: ShortcutsDialogProps) {
           </button>
         </div>
         <div className="grid gap-5 p-5 sm:grid-cols-2">
-          {(["global", "squad", "tactics", "match-day"] as const).map((scope) => {
+          {(["global", "squad", "tactics", "match-day", "market", "news"] as const).map((scope) => {
             const hotkeys = HOTKEYS.filter((hotkey) => hotkey.scope === scope);
 
             if (hotkeys.length === 0) {

@@ -112,10 +112,16 @@ export function HomeView() {
           <h2 className="mt-1 font-display text-xl font-semibold">Noticias</h2>
         </div>
         <div className="divide-y divide-border">
-          {game.newsLog.map((item) => (
-            <article className="px-5 py-4" key={item.id}>
+          {game.newsLog.slice(0, 8).map((item) => (
+            <article
+              className={`px-5 py-4 ${item.importance === "special" ? "bg-whistle/10" : ""}`}
+              key={item.id}
+            >
               <p className="font-mono text-xs text-muted">Semana {formatInteger(item.week)}</p>
-              <h3 className="mt-1 text-sm font-semibold">{item.title}</h3>
+              <h3 className="mt-1 text-sm font-semibold">
+                {item.importance === "special" ? "Destaque: " : ""}
+                {item.title}
+              </h3>
               {item.body ? <p className="mt-2 text-sm text-muted">{item.body}</p> : null}
             </article>
           ))}

@@ -7,6 +7,7 @@ export type {
   MatchEvent,
   MatchResult,
   NewsItem,
+  NewsTag,
   Player,
   PlayerTrait,
   Position,

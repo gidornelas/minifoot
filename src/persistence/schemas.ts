@@ -137,6 +137,12 @@ export const NewsItemSchema = z.object({
   type: z.enum(["match", "transfer", "injury", "performance", "system"]),
   title: z.string().min(1),
   body: z.string().optional(),
+  tags: z
+    .array(
+      z.enum(["comeback", "derby", "form", "injury", "player-club", "result", "transfer", "upset"]),
+    )
+    .optional(),
+  importance: z.enum(["normal", "special"]).optional(),
   createdAt: z.number().int().nonnegative(),
   relatedClubId: z.string().min(1).optional(),
   relatedPlayerId: z.string().min(1).optional(),

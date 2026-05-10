@@ -134,10 +134,22 @@ export interface NewsItem {
   type: "match" | "transfer" | "injury" | "performance" | "system";
   title: string;
   body?: string;
+  tags?: NewsTag[];
+  importance?: "normal" | "special";
   createdAt: number;
   relatedClubId?: string;
   relatedPlayerId?: string;
 }
+
+export type NewsTag =
+  | "comeback"
+  | "derby"
+  | "form"
+  | "injury"
+  | "player-club"
+  | "result"
+  | "transfer"
+  | "upset";
 
 export interface SeasonRecord {
   season: number;

@@ -11,3 +11,4 @@
 - Sprint 4: shell jogavel com sidebar, Home, Elenco ordenavel por teclado, Tatica com formacao/XI persistidos, atalhos globais e cheat-sheet gerada pelo registro central.
 - Sprint 5: Match Day com narrativa por evento, velocidades por botoes/atalhos, placar animado, tabela filtravel e avancar rodada integrado a engine.
 - Sprint 6: mercado de transferencias com janela aberta/fechada, valuation, ofertas/contrapropostas, compras, transferencias CPU e tela filtravel.
+- Sprint 7: engine de noticias com 88 templates, tags/importance, feed filtravel na Home/Noticias e destaques visuais para zebras, viradas e transferencias aceitas.

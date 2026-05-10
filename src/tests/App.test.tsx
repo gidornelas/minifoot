@@ -76,6 +76,24 @@ describe("App", () => {
     expect(screen.getByRole("heading", { name: "Serie A Minimalista" })).toBeInTheDocument();
   });
 
+  it("opens the news feed and filters special stories", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    fireEvent.keyDown(window, { code: "Space", key: " " });
+    await user.click(screen.getByRole("button", { name: "Noticias6" }));
+
+    expect(screen.getByRole("heading", { level: 2, name: "Noticias" })).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Buscar noticia")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Especiais" }));
+
+    expect(screen.getByRole("button", { name: "Especiais" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+
   it("creates a market offer from the transfer screen", async () => {
     const user = userEvent.setup();
     const state = useGameStore.getState();

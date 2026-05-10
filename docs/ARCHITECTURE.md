@@ -70,3 +70,18 @@ src/ui/features/transfers/TransferMarketView.tsx
 - `evaluateTransferOffer()` retorna aceita, contraproposta ou recusa.
 - `generateCpuTransferDeals()` cria movimentos deterministas de clubes CPU a partir de necessidades por posicao.
 - `src/store/game.store.ts` aplica transferencias em `clubs`, `players`, orcamento e `newsLog`.
+
+## Noticias
+
+O Sprint 7 introduz uma engine narrativa pura para manter o feed coerente sem acoplar UI a regras de simulacao:
+
+```txt
+src/engine/news/templates.ts
+src/engine/news/news.ts
+src/ui/features/news-feed/NewsFeedView.tsx
+```
+
+- `NEWS_TEMPLATES` concentra 88 templates condicionais para jogos, zebras, viradas, mercado, performance, lesao e sistema.
+- `generateRoundNews()` prioriza partida do jogador, jogo com mais gols e eventos especiais; a rodada alterna teto de 2/3 manchetes para fechar uma temporada com 50-100 itens.
+- `generateTransferNews()` registra ofertas, contrapropostas, recusas e contratacoes aceitas no mesmo `newsLog`.
+- `NewsItem.tags` e `NewsItem.importance` permitem destacar visualmente zebras, viradas e negocios aceitos na Home e na tela `Noticias`.

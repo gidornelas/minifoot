@@ -7,6 +7,8 @@ import {
   evaluateTransferOffer,
   generateCpuTransferDeals,
   generateLeague,
+  generateRoundNews,
+  generateTransferNews,
   isTransferWindowOpen,
   simulateRound,
 } from "../engine";
@@ -387,16 +389,17 @@ export const useGameStore = create<GameStore>()(
             matches[match.id] = match;
           }
 
-          const playerMatch = playedMatches.find(
-            (match) =>
-              match.homeId === state.game.playerClubId || match.awayId === state.game.playerClubId,
-          );
-          const newsLog = playerMatch
-            ? [
-                createMatchNews(state.game, playerMatch.id, round, matches),
-                ...state.game.newsLog,
-              ].slice(0, 200)
-            : state.game.newsLog;
+          const roundNews = generateRoundNews({
+            clubs: state.game.clubs,
+            matches: playedMatches,
+            playerClubId: state.game.playerClubId,
+            players: state.game.players,
+            week: round,
+          });
+          const newsLog =
+            roundNews.length > 0
+              ? [...roundNews, ...state.game.newsLog].slice(0, 200)
+              : state.game.newsLog;
 
           return {
             activeView: "match-day",
@@ -516,62 +519,21 @@ function createInitialGameState(seed: number): GameState {
   };
 }
 
-function createMatchNews(
-  game: GameState,
-  matchId: string,
-  round: number,
-  matches: GameState["matches"],
-): GameState["newsLog"][number] {
-  const match = matches[matchId];
-
-  if (!match?.result) {
-    return {
-      id: `news-round-${round}`,
-      week: round,
-      type: "match",
-      title: `Rodada ${round} concluida`,
-      createdAt: round,
-    };
-  }
-
-  const home = game.clubs[match.homeId];
-  const away = game.clubs[match.awayId];
-
-  return {
-    id: `news-${match.id}`,
-    week: round,
-    type: "match",
-    title: `${home?.shortName ?? match.homeId} ${match.result.homeGoals} x ${
-      match.result.awayGoals
-    } ${away?.shortName ?? match.awayId}`,
-    body: match.result.events[0]?.description ?? "Partida sem grandes rupturas no roteiro.",
-    createdAt: round,
-    relatedClubId: game.playerClubId,
-  };
-}
-
 function createTransferNews(game: GameState, offer: TransferOffer): GameState["newsLog"][number] {
   const player = game.players[offer.playerId];
   const fromClub = game.clubs[offer.fromClubId];
   const toClub = game.clubs[offer.toClubId];
-  const playerName = player ? `${player.firstName} ${player.lastName}` : "Jogador";
 
-  return {
-    body:
-      offer.status === "counter"
-        ? `${fromClub?.shortName ?? "CPU"} pediu contraproposta de ${offer.counterAmount}.`
-        : offer.reason,
-    createdAt: game.currentSeason.currentWeek,
+  return generateTransferNews({
+    fee: offer.counterAmount ?? offer.amount,
+    fromClub,
     id: `news-transfer-${offer.id}-${offer.status}`,
-    relatedClubId: toClub?.id,
-    relatedPlayerId: offer.playerId,
-    title:
-      offer.status === "accepted"
-        ? `${playerName} chega ao ${toClub?.shortName ?? "clube"}`
-        : `${fromClub?.shortName ?? "CPU"} responde por ${playerName}`,
-    type: "transfer",
+    player,
+    reason: offer.status === "counter" ? `Pedida atual: ${offer.counterAmount}.` : offer.reason,
+    status: offer.status,
+    toClub,
     week: game.currentSeason.currentWeek,
-  };
+  });
 }
 
 function createCpuTransferNews(
@@ -581,18 +543,17 @@ function createCpuTransferNews(
   const player = game.players[deal.playerId];
   const fromClub = game.clubs[deal.fromClubId];
   const toClub = game.clubs[deal.toClubId];
-  const playerName = player ? `${player.firstName} ${player.lastName}` : "Jogador";
 
-  return {
-    body: `${fromClub?.shortName ?? "CPU"} recebeu ${deal.fee} pela negociacao.`,
-    createdAt: game.currentSeason.currentWeek,
+  return generateTransferNews({
+    fee: deal.fee,
+    fromClub,
     id: `news-cpu-transfer-${deal.playerId}-${deal.toClubId}-${game.currentSeason.currentWeek}`,
-    relatedClubId: toClub?.id,
-    relatedPlayerId: deal.playerId,
-    title: `${playerName} assina com ${toClub?.shortName ?? "CPU"}`,
-    type: "transfer",
+    player,
+    reason: `${fromClub?.shortName ?? "CPU"} recebeu ${deal.fee} pela negociacao.`,
+    status: "accepted",
+    toClub,
     week: game.currentSeason.currentWeek,
-  };
+  });
 }
 
 function applyTransfer(
