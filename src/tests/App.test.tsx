@@ -13,8 +13,26 @@ describe("App", () => {
     useGameStore.getState().resetCareer();
   });
 
-  it("renders the Sprint 4 dashboard shell", () => {
+  it("starts with onboarding and completes a new career", async () => {
+    const user = userEvent.setup();
     render(<App />);
+
+    expect(screen.getByRole("heading", { name: "minifoot." })).toBeInTheDocument();
+    expect(screen.getByText("Clubes disponiveis")).toBeInTheDocument();
+
+    await user.clear(screen.getByPlaceholderText("Tecnico"));
+    await user.type(screen.getByPlaceholderText("Tecnico"), "Ana");
+    await user.click(screen.getByRole("button", { name: "Comecar carreira" }));
+
+    expect(screen.getByRole("heading", { name: "Home" })).toBeInTheDocument();
+    expect(useGameStore.getState().game.playerName).toBe("Ana");
+    expect(useGameStore.getState().onboardingComplete).toBe(true);
+  });
+
+  it("renders the Sprint 4 dashboard shell", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await completeOnboarding(user);
 
     expect(screen.getByRole("heading", { name: "Home" })).toBeInTheDocument();
     expect(screen.getByText("minifoot.")).toBeInTheDocument();
@@ -24,6 +42,7 @@ describe("App", () => {
   it("navigates to squad by keyboard and opens a player detail with Enter", async () => {
     const user = userEvent.setup();
     render(<App />);
+    await completeOnboarding(user);
 
     await user.keyboard("2");
 
@@ -42,6 +61,7 @@ describe("App", () => {
   it("opens the generated shortcuts dialog", async () => {
     const user = userEvent.setup();
     render(<App />);
+    await completeOnboarding(user);
 
     await user.keyboard("?");
 
@@ -52,6 +72,7 @@ describe("App", () => {
   it("persists tactical formation changes", async () => {
     const user = userEvent.setup();
     render(<App />);
+    await completeOnboarding(user);
 
     await user.keyboard("3");
     await user.click(screen.getByRole("button", { name: "4-3-3" }));
@@ -63,6 +84,7 @@ describe("App", () => {
   it("advances a round from the keyboard and opens match day", async () => {
     const user = userEvent.setup();
     render(<App />);
+    await completeOnboarding(user);
 
     fireEvent.keyDown(window, { code: "Space", key: " " });
 
@@ -79,6 +101,7 @@ describe("App", () => {
   it("opens the news feed and filters special stories", async () => {
     const user = userEvent.setup();
     render(<App />);
+    await completeOnboarding(user);
 
     fireEvent.keyDown(window, { code: "Space", key: " " });
     await user.click(screen.getByRole("button", { name: "Noticias6" }));
@@ -97,6 +120,7 @@ describe("App", () => {
   it("shows the season end summary and starts the next season", async () => {
     const user = userEvent.setup();
     render(<App />);
+    await completeOnboarding(user);
 
     for (let round = 1; round <= 38; round += 1) {
       act(() => {
@@ -149,3 +173,7 @@ describe("App", () => {
     expect(screen.getByText(/Contraproposta|recusada|contratado/i)).toBeInTheDocument();
   });
 });
+
+async function completeOnboarding(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole("button", { name: "Comecar carreira" }));
+}

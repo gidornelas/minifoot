@@ -25,6 +25,7 @@ export const HOTKEYS: HotkeyEntry[] = [
   { id: "action.back", keys: ["Esc"], label: "Voltar", scope: "global" },
   { id: "modal.shortcuts", keys: ["?"], label: "Atalhos", scope: "global" },
   { id: "save.manual", keys: ["Ctrl/Command", "S"], label: "Salvar", scope: "global" },
+  { id: "sound.toggle", keys: ["M"], label: "Som on/off", scope: "global" },
   { id: "squad.search", keys: ["/"], label: "Buscar elenco", scope: "squad" },
   { id: "tactics.reset", keys: ["R"], label: "Resetar tatica", scope: "tactics" },
   { id: "tactics.auto", keys: ["A"], label: "Auto-escalacao", scope: "tactics" },

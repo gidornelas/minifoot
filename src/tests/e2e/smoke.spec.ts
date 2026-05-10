@@ -1,10 +1,16 @@
 import { expect, test } from "@playwright/test";
 
-test("plays a Sprint 8 keyboard path", async ({ page }) => {
+test("plays a Sprint 9 keyboard-only path", async ({ page }) => {
   await page.goto("/");
   await page.evaluate(() => localStorage.clear());
   await page.reload();
 
+  await expect(page.getByRole("heading", { name: "minifoot." })).toBeVisible();
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Control+A");
+  await page.keyboard.type("Ana");
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Enter");
   await expect(page.getByRole("heading", { name: "Home" })).toBeVisible();
 
   await page.keyboard.press("2");
@@ -36,10 +42,11 @@ test("plays a Sprint 8 keyboard path", async ({ page }) => {
   );
 });
 
-test("finishes a season and starts the next one", async ({ page }) => {
+test("finishes a season and starts the next one with mouse", async ({ page }) => {
   await page.goto("/");
   await page.evaluate(() => localStorage.clear());
   await page.reload();
+  await page.getByRole("button", { name: "Comecar carreira" }).click();
 
   const advanceButton = page.getByRole("button", { name: "Avancar rodada" }).first();
 
@@ -55,4 +62,22 @@ test("finishes a season and starts the next one", async ({ page }) => {
 
   await expect(page.getByRole("heading", { name: "Home" })).toBeVisible();
   await expect(page.getByText("1/41")).toBeVisible();
+});
+
+test("keeps critical accessibility contracts", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await page.getByRole("button", { name: "Comecar carreira" }).click();
+
+  await expect(page.locator("h1")).toHaveCount(1);
+
+  const unnamedButtons = await page.locator("button").evaluateAll((buttons) =>
+    buttons
+      .filter((button) => (button.textContent ?? "").trim().length === 0)
+      .filter((button) => !button.getAttribute("aria-label") && !button.getAttribute("title"))
+      .map((button) => button.outerHTML),
+  );
+
+  expect(unnamedButtons).toEqual([]);
 });

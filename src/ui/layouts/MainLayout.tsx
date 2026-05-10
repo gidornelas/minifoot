@@ -8,12 +8,15 @@ import {
   Save,
   ShoppingBag,
   Users,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
 import type { AppView } from "../../store/game.store";
 import { useGameStore } from "../../store/game.store";
 import { ShortcutsDialog } from "../components/ShortcutsDialog";
+import { TutorialCoachMarks } from "../components/TutorialCoachMarks";
 import { useHotkey } from "../hotkeys/useHotkey";
 
 interface MainLayoutProps {
@@ -39,10 +42,12 @@ export function MainLayout({ children }: MainLayoutProps) {
   const activeView = useGameStore((state) => state.activeView);
   const game = useGameStore((state) => state.game);
   const lastAction = useGameStore((state) => state.lastAction);
+  const soundEnabled = useGameStore((state) => state.soundEnabled);
   const setActiveView = useGameStore((state) => state.setActiveView);
   const saveManual = useGameStore((state) => state.saveManual);
   const advanceRound = useGameStore((state) => state.advanceRound);
   const acknowledgeAction = useGameStore((state) => state.acknowledgeAction);
+  const toggleSound = useGameStore((state) => state.toggleSound);
   const club = game.clubs[game.playerClubId];
   const seasonFinished = game.currentSeason.finished;
   const title =
@@ -81,6 +86,32 @@ export function MainLayout({ children }: MainLayoutProps) {
     };
   }, [acknowledgeAction, lastAction]);
 
+  useEffect(() => {
+    if (!soundEnabled || !lastAction) {
+      return;
+    }
+
+    const audioWindow = window as Window &
+      typeof globalThis & { webkitAudioContext?: typeof AudioContext };
+    const AudioContextConstructor = audioWindow.AudioContext ?? audioWindow.webkitAudioContext;
+
+    if (!AudioContextConstructor) {
+      return;
+    }
+
+    const context = new AudioContextConstructor();
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+
+    oscillator.type = "sine";
+    oscillator.frequency.value = 520;
+    gain.gain.value = 0.025;
+    oscillator.connect(gain);
+    gain.connect(context.destination);
+    oscillator.start();
+    oscillator.stop(context.currentTime + 0.08);
+  }, [lastAction, soundEnabled]);
+
   useHotkey("1", () => setActiveView("home"), { enabled: activeView !== "match-day" });
   useHotkey("2", () => setActiveView("squad"), { enabled: activeView !== "match-day" });
   useHotkey("3", () => setActiveView("tactics"), { enabled: activeView !== "match-day" });
@@ -93,6 +124,7 @@ export function MainLayout({ children }: MainLayoutProps) {
     enableOnFormTags: true,
     enabled: activeView !== "match-day" && activeView !== "season-end",
   });
+  useHotkey("m", toggleSound, { enableOnFormTags: true });
   useHotkey("mod+s", saveManual, { enableOnFormTags: true });
 
   return (
@@ -164,6 +196,20 @@ export function MainLayout({ children }: MainLayoutProps) {
                 Rodada
               </button>
               <button
+                aria-label={soundEnabled ? "Desligar som" : "Ligar som"}
+                aria-pressed={soundEnabled}
+                className="flex h-10 w-10 items-center justify-center rounded-sm border border-border text-muted transition hover:border-border-strong hover:text-foreground"
+                onClick={toggleSound}
+                title={soundEnabled ? "Som ligado" : "Som desligado"}
+                type="button"
+              >
+                {soundEnabled ? (
+                  <Volume2 aria-hidden="true" size={18} />
+                ) : (
+                  <VolumeX aria-hidden="true" size={18} />
+                )}
+              </button>
+              <button
                 aria-label="Salvar carreira"
                 className="flex h-10 w-10 items-center justify-center rounded-sm border border-border text-muted transition hover:border-border-strong hover:text-foreground"
                 onClick={saveManual}
@@ -184,7 +230,7 @@ export function MainLayout({ children }: MainLayoutProps) {
             </div>
           </header>
           <main className="min-w-0 flex-1 px-4 py-5 lg:px-6" id="main-content">
-            {children}
+            <div className="animate-panel-in">{children}</div>
           </main>
         </div>
       </div>
@@ -193,6 +239,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           {lastAction}
         </div>
       ) : null}
+      <TutorialCoachMarks />
       <ShortcutsDialog onClose={closeShortcuts} open={shortcutsOpen} />
     </div>
   );

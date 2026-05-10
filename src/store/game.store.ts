@@ -54,6 +54,9 @@ export interface TransferOffer {
 interface GameStoreState {
   activeView: AppView;
   game: GameState;
+  onboardingComplete: boolean;
+  soundEnabled: boolean;
+  tutorialDismissedIds: string[];
   squadSort: {
     key: SquadSortKey;
     direction: SortDirection;
@@ -84,6 +87,10 @@ interface GameStoreActions {
   runCpuTransferWindow: () => void;
   advanceRound: () => void;
   startNextSeason: () => void;
+  completeOnboarding: (input: { managerName: string; clubId: string }) => void;
+  toggleSound: () => void;
+  dismissTutorial: (id: string) => void;
+  skipTutorial: () => void;
   resetCareer: () => void;
   saveManual: () => void;
   acknowledgeAction: () => void;
@@ -116,6 +123,9 @@ export const useGameStore = create<GameStore>()(
       cpuTransfersThisWindow: 0,
       lastRoundMatchIds: [],
       lastAction: "",
+      onboardingComplete: false,
+      soundEnabled: false,
+      tutorialDismissedIds: [],
       setActiveView: (view) => {
         set({ activeView: view, pendingBenchPlayerId: null, selectedPlayerId: null });
       },
@@ -485,6 +495,45 @@ export const useGameStore = create<GameStore>()(
           };
         });
       },
+      completeOnboarding: (input) => {
+        const managerName = input.managerName.trim() || "Tecnico";
+        const game = createInitialGameState(INITIAL_SEED, input.clubId, managerName);
+
+        set({
+          activeView: "home",
+          cpuTransfersThisWindow: 0,
+          game,
+          lastAction: "Carreira iniciada",
+          lastRoundMatchIds: [],
+          onboardingComplete: true,
+          pendingBenchPlayerId: null,
+          selectedPlayerId: null,
+          transferOffers: [],
+          tutorialDismissedIds: [],
+          tactic: {
+            formation: "4-4-2",
+            mentality: "balanced",
+            lineup: pickBestLineup(game),
+            savedAt: Date.now(),
+          },
+        });
+      },
+      toggleSound: () => {
+        set((state) => ({
+          lastAction: state.soundEnabled ? "Som desligado" : "Som ligado",
+          soundEnabled: !state.soundEnabled,
+        }));
+      },
+      dismissTutorial: (id) => {
+        set((state) => ({
+          tutorialDismissedIds: state.tutorialDismissedIds.includes(id)
+            ? state.tutorialDismissedIds
+            : [...state.tutorialDismissedIds, id],
+        }));
+      },
+      skipTutorial: () => {
+        set({ tutorialDismissedIds: TUTORIAL_IDS });
+      },
       resetCareer: () => {
         set({
           activeView: "home",
@@ -495,6 +544,9 @@ export const useGameStore = create<GameStore>()(
           selectedPlayerId: null,
           transferOffers: [],
           cpuTransfersThisWindow: 0,
+          onboardingComplete: false,
+          soundEnabled: false,
+          tutorialDismissedIds: [],
           squadSort: {
             key: "overall",
             direction: "desc",
@@ -521,17 +573,29 @@ export const useGameStore = create<GameStore>()(
         cpuTransfersThisWindow: state.cpuTransfersThisWindow,
         game: state.game,
         lastRoundMatchIds: state.lastRoundMatchIds,
+        onboardingComplete: state.onboardingComplete,
         squadSort: state.squadSort,
+        soundEnabled: state.soundEnabled,
         tactic: state.tactic,
         transferOffers: state.transferOffers,
+        tutorialDismissedIds: state.tutorialDismissedIds,
       }),
     },
   ),
 );
 
-function createInitialGameState(seed: number): GameState {
+const TUTORIAL_IDS = ["home", "squad", "tactics", "advance"];
+
+function createInitialGameState(
+  seed: number,
+  preferredClubId?: string,
+  managerName = "Tecnico",
+): GameState {
   const generated = generateLeague(seed);
-  const playerClubId = generated.league.clubIds[0];
+  const playerClubId =
+    preferredClubId && generated.league.clubIds.includes(preferredClubId)
+      ? preferredClubId
+      : generated.league.clubIds[0];
 
   if (!playerClubId) {
     throw new Error("Generated league has no clubs.");
@@ -554,7 +618,7 @@ function createInitialGameState(seed: number): GameState {
     seed,
     rngState: generated.rngState,
     createdAt: 0,
-    playerName: "Tecnico",
+    playerName: managerName,
     playerClubId,
     currentSeason: {
       number: 1,

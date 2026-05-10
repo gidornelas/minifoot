@@ -99,3 +99,19 @@ src/ui/features/season-end/SeasonEndView.tsx
 - Como o MVP tem uma unica liga jogavel, o rebaixamento troca clubes CPU da zona por promovidos e preserva o clube do usuario para manter a carreira jogavel.
 - `startNextSeason()` recria o calendario com `seasonId` novo, reseta a semana para 1 e publica uma noticia especial de abertura.
 - `SeasonRecord` guarda ids de promovidos, rebaixados, aposentados, regens e conquistas para alimentar a tela `Fim de temporada`.
+
+## Polimento MVP
+
+O Sprint 9 fecha o loop jogavel com onboarding, tutorial e preferencias leves persistidas no store:
+
+```txt
+src/ui/features/onboarding/OnboardingView.tsx
+src/ui/components/TutorialCoachMarks.tsx
+src/ui/layouts/MainLayout.tsx
+```
+
+- `onboardingComplete`, `soundEnabled` e `tutorialDismissedIds` ficam em `zustand/persist`.
+- O onboarding recria a carreira deterministica com tecnico e clube escolhidos antes de liberar o shell.
+- O tutorial tem 4 dicas contextuais e pode ser dispensado individualmente ou pulado de uma vez.
+- O som e opcional, desligado por padrao, e usa Web Audio apenas quando o usuario ativa o toggle.
+- O polimento visual usa animacao CSS curta respeitando `prefers-reduced-motion`.
